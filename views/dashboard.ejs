@@ -1,0 +1,159 @@
+<%- include('navbar.ejs') %>
+
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" />
+  <title><%= title %></title>
+</head>
+<body class="h-full">
+  <div class="min-h-full">
+    <main>
+      <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+        <div class="max-w-screen-xl mx-auto p-5 sm:p-10 md:p-16">
+          <div class="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-10">
+            <% quizzes.forEach(quiz => { %>
+              <div class="rounded overflow-hidden shadow-lg transform scale-100 hover:scale-105 transition-transform ease-in-out">
+                <a href="#"></a>
+                <div class="relative">
+                  <a href="#">
+                    <img class="w-full" src="/images/image<%= Math.floor(Math.random() * 10) + 1 %>.jpg" alt="<%= quiz.title %>" />
+                    <div class="hover:bg-transparent transition duration-300 absolute bottom-0 top-0 right-0 left-0 bg-gray-900 opacity-25"></div>
+                  </a>
+
+                  <div onclick="checkplay('<%= quiz.quizId %>')" class="absolute bottom-0 left-0 bg-indigo-600 px-10 py-2 text-white text-sm hover:bg-black hover:text-indigo-600 transition duration-500 ease-in-out">
+                    Play Quiz
+                  </div>
+
+                  <a href="#">
+                    <div class="text-sm absolute top-0 right-0 bg-indigo-600 px-4 text-white rounded-full h-16 w-16 flex flex-col items-center justify-center mt-3 mr-3 hover:bg-black hover:text-indigo-600 transition duration-500 ease-in-out">
+                      <span class="font-bold"><%= quiz.questions %></span>
+                      <small>Questions</small>
+                    </div>
+                  </a>
+                </div>
+                <div class="px-6 py-4">
+                  <a href="#" class="font-semibold text-lg inline-block hover:text-indigo-600 transition duration-500 ease-in-out"><%= quiz.title %></a>
+                  <p class="text-gray-500 text-sm"><%= quiz.topicId %></p>
+                </div>
+                <div class="px-6 py-4 flex flex-row items-center"></div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+    <script>
+
+      
+function checkplay(joinCode) {
+    
+
+    fetch('/checkuserplay', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quizid: joinCode }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status) {
+            if (confirm(data.message + ". Do you want to Continue?")) {
+                // If the user confirms, make a GET request to /playbyid/{quizid}
+                fetch('/playbyid/' + data.playId)
+                .then(response => response.json())
+                .then(playData => {
+                    if (playData.status) {
+                        // Redirect to /joinquiz/{joincode} if the status is true
+                        window.location.href = '/joinquiz/' + playData.quizId;
+                    } else {
+                        // Show alert with a message if the status is false
+                        alert(playData.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                // User choose not to continue
+                playquiz(joinCode);
+            }
+        } else {
+            // Continue with the join form submission
+            playquiz(joinCode);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+      function playquiz(quizid) {
+        fetch("/validateJoinCode", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ joinCode: quizid }),
+        })
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (data) {
+            if (data.valid) {
+              window.location.href = "/joinquiz/" + data.quizId;
+            } else {
+              alert(data.message);
+            }
+          })
+          .catch(function (error) {
+            console.error("Error:", error);
+          });
+      }
+
+      fetch("/isSessionAuthenticated")
+        .then((response) => response.json())
+        .then((data) => {
+          const isAuthenticated = data.authenticated;
+
+          document.getElementById("loginButton").style.display = isAuthenticated
+            ? "none"
+            : "block";
+          document.getElementById("signupButton").style.display =
+            isAuthenticated ? "none" : "block";
+          document.getElementById("userPic").style.display = isAuthenticated
+            ? "block"
+            : "none";
+        })
+        .catch((error) => {
+          console.error("Error fetching authentication status:", error);
+        });
+
+      fetch("/profile")
+        .then((response) => response.json())
+        .then((data) => {
+          const isAuthenticated = data.authenticated;
+          const username = data.username;
+          const email = data.email;
+
+          const userNameElement = document.getElementById("userName");
+          const userEmailElement = document.getElementById("userEmail");
+
+          if (isAuthenticated) {
+
+            userNameElement.textContent = username;
+            userEmailElement.textContent = email;
+
+            console.log("Authenticated user:", username, "Email:", email);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user details:", error);
+        });
+
+    </script>
+  </body>
+</html>

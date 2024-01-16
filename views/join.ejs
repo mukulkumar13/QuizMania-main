@@ -1,0 +1,146 @@
+<%- include('navbar.ejs') %>
+
+
+<!DOCTYPE html>
+<html lang="en" ng-app="quizApp">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=title %></title>
+    
+   
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.angularjs.org/1.8.2/angular.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css">
+    
+</head>
+
+<body ng-controller="JoinController">
+
+    <div id="notAuthenticatedMessage" class="alert alert-danger text-center" ng-if="!authenticated">
+        <p>You are not logged in. 😢</p>
+        <p>Please <a href="/login">log in</a> to join a quiz.</p>
+        <p>Redirecting to login page in <span id="countdown" ng-bind="countdownValue"></span> seconds...</p>
+    </div>
+
+    <div class="container mt-5" ng-if="authenticated">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Join a Quiz</h5>
+                        <form ng-submit="checkplay()">
+                            <div class="form-group">
+                                <label for="join-code">Enter Join Code:</label>
+                                <input type="text" class="form-control" ng-model="joinCode" name="joinCode" id="joinCode" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Join</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var app = angular.module('quizApp', []);
+
+        app.controller('JoinController', function ($scope, $http, $location, $interval,$window) {
+       
+            $scope.authenticated = false; // initial authentication status
+            $scope.countdownValue = 5; //  initial countdown value
+
+            // Checking if the user is authenticated
+            $http.get('/isSessionAuthenticated')
+                .then(function (response) {
+                    $scope.authenticated = response.data.authenticated;
+
+                    // Starting the countdown if not authenticated
+                    if (!$scope.authenticated) {
+                        $scope.startCountdown();
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error checking authentication:', error);
+                });
+
+            // Function to start the dynamic countdown
+            $scope.startCountdown = function () {
+                var countdownInterval = $interval(function () {
+                    $scope.countdownValue--;
+
+                    if ($scope.countdownValue <= 0) {
+                        $window.location.href = '/login';
+                       
+                    }
+                }, 1000, $scope.countdownValue);
+
+                countdownInterval.then(function () {
+                    // resetting the count down value
+                    $scope.countdownValue = 0;
+                });
+            };
+
+            $scope.joinFormSubmit = function () {
+                var joinCode = $scope.joinCode;
+
+                $http.post('/validateJoinCode', { joinCode: document.getElementById('joinCode').value })
+                    .then(function (response) {
+                        var data = response.data;
+                        if (data.valid) {
+                           
+                            $window.location.href = ('/joinquiz/' + data.quizId);
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Error:', error);
+                    });
+            };
+
+            $scope.checkplay = function () {
+  
+        $http.post('/checkuserplay', { quizid: document.getElementById('joinCode').value })
+            .then(function (response) {
+                var data = response.data;
+                if (data.status) {
+                    if (confirm(data.message + ". Do you want to Continue?")) {
+                        // If the user confirms, make a GET request to /playbyid/{quizid}
+                        $http.get('/playbyid/' + data.playId)
+                            .then(function (response) {
+                                var playData = response.data;
+
+                                if (playData.status) {
+                                    // Redirect to /joinquiz/{joincode} if the status is true
+                                    $window.location.href = ('/joinquiz/' + playData.quizId);
+                                } else {
+                                    // Show alert with a message if the status is false
+                                    alert(playData.message);
+                                }
+                            })
+                            .catch(function (error) {
+                                console.error('Error:', error);
+                            });
+                    } else {
+                        // User choose not to continue
+                        $scope.joinFormSubmit();
+                    }
+                } else {
+                    // Continue with the join form submission
+                    $scope.joinFormSubmit();
+                }
+            })
+            .catch(function (error) {
+                console.error('Error:', error);
+            });
+    };
+
+});
+    </script>
+</body>
+
+</html>

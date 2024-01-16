@@ -1,0 +1,48 @@
+<%- include('navbar.ejs') %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%=title%></title>
+  
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center ">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Top 10 Users</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Username</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% leaderboardData.forEach((user, index) => { %>
+                                  <tr>
+                                    <td><%= index + 1 %></td>
+                                    <td><%= user.username.replace(/\b\w/g, l => l.toUpperCase()) %></td>
+                                    <td><%= user.score %></td>
+                                  </tr>
+                                <% }); %>
+                              </tbody>
+                              
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% if (userRank >= 0) { %>
+        <p class="text-center">Your Rank: <%= userRank + 1 %></p>
+    <% } else { %>
+        <p class="text-center">You are not in the top 10.</p>
+    <% } %>
+</body>
+</html>

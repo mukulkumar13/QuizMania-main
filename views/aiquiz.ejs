@@ -1,0 +1,384 @@
+<%- include('navbar.ejs') %>
+    <!DOCTYPE html>
+    <html lang="en" ng-app="quizApp">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Add Quiz - QuizMania</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <style>
+
+        #loading-spinner {
+            display: none; 
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        #loading-spinner {
+    display: block !important; 
+}
+
+
+        #quiz-container {
+            display: none; 
+        }
+            a {
+                text-decoration: none;
+            }
+
+            .form-control,
+            .form-select {
+                border: 1px solid orange;
+            }
+
+            .input-group-text {
+                background-color: black;
+                color: white;
+            }
+        </style>
+    </head>
+
+
+    <body ng-controller="QuizController">
+  
+       
+        
+        <div id="notAuthenticatedMessage" class="alert alert-danger text-center" style="display: none;">
+            <p>You are not logged in. 😢</p>
+            <p>Redirecting to login page in <span id="countdown">{{ countdownValue }}</span> seconds...</p>
+            <p><a href="/login">Click here to log in</a></p>
+        </div>
+        <div ng-if="authenticated">
+            <div class="row mx-1">
+                <div class="d-flex align-items-center justify-content-center mt-3">
+                    <img src="/logo.jpg" alt="Logo" style="height: 3em; border-radius:50%;" />
+                    <h3 class="ms-5" style="font-family: 'Times New Roman', Times, serif;"><b>Create Your Challenge<b>
+                    </h3>
+                </div>
+                <div class="col-md-2"></div>
+
+                <div class="container mt-4 col-md-8">
+                    <div class="mb-3">
+                        
+                        <label for="quiz-topic" class="form-label">Quiz Topic</label>
+                        <input type="text" class="form-control" ng-model="quizTopic" name="quizTopic" id="quizTopic"
+                            placeholder="Enter quiz topic" value="">
+                    </div>
+
+                    <div id="question-container">
+                        <!-- Dynamic questions container -->
+                        <div class="card mt-3" ng-repeat="question in questions track by $index"
+                            style="border:1px solid black">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">Question {{$index + 1}}</h5>
+                                    <i class="delete-question fa-regular fa-trash-can fa-lg mt-2"
+                                        style="color: #ff0000;" ng-click="removeQuestion($index)"></i>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Q</span>
+                                        <input type="text" class="form-control" ng-model="question.question"
+                                            style="height: 50px;background-color: rgba(0,192,214,255); border: 1px solid skyblue;"
+                                            placeholder="Type your question">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-1"></div>
+                                    <div class="col-md-10">
+                                        <div class="mb-3" ng-repeat="option in question.options track by $index">
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{option.letter}}</span>
+                                                <input type="text" class="form-control" ng-model="option.text"
+                                                    placeholder="Type your option {{option.letter}}">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text">Correct Answer</span>
+                                                <select class="form-select" ng-model="question.answer">
+                                                    <option disabled selected>Select Correct Answer</option>
+                                                    <option ng-repeat="option in question.options"
+                                                        value="{{option.letter}}">{{option.letter}}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 d-flex justify-content-between">
+                        <div>
+                            <button class="btn btn-primary" ng-click="addQuestion()">Add Question</button>
+                        </div>
+                        <div>
+                            <button class="btn btn-secondary" ng-click="previewQuiz()">Preview Quiz</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mt-3">
+                    <div class="form-check">
+                        <input class="form-check-input" onclick="document.getElementById('checkboxValue').innerHTML=document.getElementById('checkboxValue').innerHTML=='no'?'yes':'no'" type="checkbox" id="randomQuestionCheckbox" style="border: 2px solid black;" ng-model="randomQuestion">
+                        <label class="form-check-label" for="randomQuestionCheckbox">
+                          Randomise questions
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" onclick="document.getElementById('checkboxValue2').innerHTML=document.getElementById('checkboxValue2').innerHTML=='no'?'yes':'no'" type="checkbox" id="AttemptsCheckbox" style="border: 2px solid black;" ng-model="AttempsBox">
+                        <label class="form-check-label" for="AttemptsCheckbox">
+                          Enable single attempt
+                        </label>
+                      </div>
+                </div>
+                <p id="errorText" class="text-center mt-5" style="color: red;"></p>
+                <div id="loading-spinner" ng-if="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p>Fetching Quiz...<br>
+                         It may take upto 1 minute for best results</p>
+                </div>
+            </div>
+
+            <!-- Modal for Quiz Preview -->
+            <div class="modal" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="previewModalLabel">Preview Quiz </h5>
+                        </div>
+                        <div class="modal-body">
+                            <div id="preview-questions">
+                                <!-- Questions and options container -->
+                                <div class="mb-3" ng-repeat="previewQuestion in previewQuestions">
+                                    <strong>Question {{$index + 1}}:</strong> {{previewQuestion.question}}<br>
+                                    Options:<br>
+                                    <span ng-repeat="option in previewQuestion.options">{{option.letter}}.
+                                        {{option.text}}<br></span>
+                                    <strong>Correct Answer:</strong> {{previewQuestion.answer}}
+                                </div>
+                                <div>
+                                    Randomize Questions: <span id="checkboxValue">no</span>
+                                 </div> 
+                                 <div>
+                                    Single Time Play: <span id="checkboxValue2">no</span>
+                                  </div>    
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                ng-click="backToEditing()">Back to Editing</button>
+                            <button id="confirm-quiz" class="btn btn-success" ng-click="confirmQuiz()">Confirm
+                                Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://code.angularjs.org/1.8.2/angular.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+
+            angular.module('quizApp', []).controller('QuizController', function ($scope, $interval, $timeout, $window, $location) {
+                $scope.questions = [];
+                $scope.previewQuestions = [];
+                $scope.authenticated = false;
+
+
+
+                $scope.checkAuthentication = function () {
+                    $.ajax({
+                        url: '/isSessionAuthenticated',
+                        method: 'GET',
+                        success: function (response) {
+                            if (!response.authenticated) {
+                                // If not authenticated, show the message and update countdown dynamically
+                                $('#notAuthenticatedMessage').show();
+                                $scope.startCountdown(5); //Initial countdown value
+                            } else {
+
+                                if (urlParams.get('topic').length < 1) {
+                                    alert("Topic length must be atleast 2 to process your request");
+                                    $('#authenticated').hide();
+                                    window.location('/createAIQuiz');
+                                }
+                                // If authenticated, show the content
+                                $scope.$apply(function () {
+                                    $scope.authenticated = true;
+                                    console.log($scope.authenticated);
+                                });
+                            }
+                        },
+                        error: function (err) {
+                            console.error('Error checking authentication:', err);
+                        }
+                    });
+                };
+
+                //  Dynamic countdown function
+                $scope.startCountdown = function (seconds) {
+                    $scope.countdownValue = seconds;
+
+                    var countdownInterval = $interval(function () {
+                        $scope.countdownValue--;
+
+                        if ($scope.countdownValue <= 0) {
+                            $window.location.href = '/login';
+                        }
+                    }, 1000, seconds);
+
+                    countdownInterval.then(function () {
+                        // Cleanup function
+                        $scope.countdownValue = 0;
+                    });
+                };
+
+                $scope.addQuestion = function () {
+                    $scope.questions.push({
+                        question: '',
+                        options: [
+                            { letter: 'A', text: '' },
+                            { letter: 'B', text: '' },
+                            { letter: 'C', text: '' },
+                            { letter: 'D', text: '' }
+                        ],
+                        answer: ''
+                    });
+                };
+
+                $scope.removeQuestion = function (index) {
+                    $scope.questions.splice(index, 1);
+                };
+
+
+
+                $scope.previewQuiz = function () {
+                    $scope.previewQuestions = angular.copy($scope.questions);
+
+                    $('#previewModal').modal('show');
+                };
+
+                $scope.backToEditing = function () {
+                    $('#previewModal').modal('hide');
+                };
+
+
+                $scope.confirmQuiz = function () {
+
+                    var transformedQuestions = $scope.questions.map(function (question) {
+                        return {
+                            question: question.question,
+                            options: question.options.map(function (option) {
+                                return option.text; 
+                            }),
+                            answer: question.answer
+                        };
+                    });
+
+
+                    $.ajax({
+                        url: '/addquiz',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            quizTopic: document.getElementById('quizTopic').value,
+                            questions: transformedQuestions,
+                            isRandom: document.getElementById('checkboxValue').innerHTML,
+                            singleTime: document.getElementById('checkboxValue2').innerHTML,
+                        }),
+                        success: function (response) {
+
+                            alert('Quiz added successfully');
+                            window.location.href = '/myquizes';
+                        },
+                        error: function (err) {
+                            console.error('Error:', err);
+                            alert('Error adding quiz');
+                        }
+                    });
+                    console.log('Quiz confirmed');
+                    $('#previewModal').modal('hide');
+                };
+
+
+
+                $scope.fetchQuestions = async function () {
+
+
+                    $scope.quizTopic = urlParams.get('topic') || '';
+
+                    $scope.loading = true; 
+                    try{
+                   await $.ajax({
+                        url: '/getaiquiz?topic=' + urlParams.get('topic'),
+                        method: 'GET',
+                        contentType: 'application/json',
+                        success: function (response) {
+                           if(response.error){
+                            $scope.$apply(function(){
+                                $scope.loading = false;
+                            })
+                            document.getElementById('errorText').innerText = response.error;
+                            return alert(response.error);
+                           }
+
+                            var json = JSON.parse(response);
+
+                            json.forEach(item => {
+                                const questionObj = {
+                                    question: item.question,
+                                    options: [
+                                        { letter: 'A', text: item.options[0] },
+                                        { letter: 'B', text: item.options[1] },
+                                        { letter: 'C', text: item.options[2] },
+                                        { letter: 'D', text: item.options[3] }
+                                    ],
+                                    answer: item.correctAnswer
+                                };
+
+                                $scope.$apply(function() {
+                                    $scope.questions.push(questionObj);
+                                    $scope.loading = false;
+});
+
+                               
+
+
+                            });
+
+
+                            console.log('Server Response:', response);
+                            $scope.loading = false; 
+                        },
+                        error: function (err) {
+                            $scope.loading = false; 
+                            console.error('Error:', err);
+                            alert('Error fetching quiz');
+                        }
+                    });
+                    console.log('Quiz fetched');
+                   
+                }
+                catch(error){
+                    console.log(error);
+                    $scope.loading = false; 
+                }
+                };
+
+
+                $scope.fetchQuestions();
+                $scope.checkAuthentication();
+            });
+        </script>
+    </body>
+
+    </html>

@@ -1,0 +1,179 @@
+<!-- user-quizzes.ejs -->
+<%- include('navbar.ejs') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <title>Your Quizzes</title>
+</head>
+<body>
+  <div class="container">
+    
+    
+      <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+        <div class="max-w-screen-xl mx-auto p-5 sm:p-10 md:p-16">
+         <div class="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-10">
+            
+      <% quizzes.forEach(quiz => { %>
+        
+                <div class="rounded overflow-hidden shadow-lg transform scale-100 hover:scale-105 transition-transform ease-in-out">
+        
+                    
+                    <div class="relative">
+                        <a >
+                          <img class="w-full" src="/images/image<%= Math.floor(Math.random() * 10) + 1 %>.jpg" alt="<%= quiz.title %>" />
+                    
+                            <div
+                                class="hover:bg-transparent transition duration-300 absolute bottom-0 top-0 right-0 left-0 bg-gray-900 opacity-25">
+                            </div>
+                        </a>
+                            <div onclick="checkplay(<%= quiz.quizId %>)" class="absolute bottom-0 left-0 bg-indigo-600 px-10 py-2 text-white text-sm hover:bg-black hover:text-indigo-600 transition duration-500 ease-in-out">
+                                Play Quiz
+                            </div>
+        
+                        <a href="">
+                            <div
+                                class="text-sm absolute top-0 right-0 bg-indigo-600 px-4 text-white rounded-full h-16 w-16 flex flex-col items-center justify-center mt-3 mr-3 hover:bg-black hover:text-indigo-600 transition duration-500 ease-in-out">
+                                <span class="font-bold"><%=quiz.numberOfQuestions%></span>
+                                <small>Questions</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="px-6 py-4">
+        
+                        <div class="flex flex-row items-center">
+                            <a href="" class="font-semibold text-lg inline-block hover:text-indigo-600 transition duration-500 ease-in-out"><%=quiz.quizTopic%></a>
+                        <a href="#" onclick="deleteQuiz(<%= quiz.quizId %>)" class="ml-auto text-red-500 hover:text-red-700 transition duration-300 ease-in-out">
+                            <i class="fas fa-trash-alt"></i>
+                          </a>
+                        </div>
+                        <p class="text-gray-500 text-sm">
+                          <%= quiz.quizId %>
+                        </p>
+                    </div>
+                    
+                    <div class="px-6 py-4 flex flex-row items-center">
+                        <span href="#" class="py-1 text-sm font-regular text-gray-900 mr-1 flex flex-row items-center">
+                            <svg height="13px" width="13px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                                xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512 512"
+                                style="enable-background:new 0 0 512 512;" xml:space="preserve">
+                                <g>
+                                    <g>
+                                        <path d="M256,0C114.837,0,0,114.837,0,256s114.837,256,256,256s256-114.837,256-256S397.163,0,256,0z M277.333,256
+              c0,11.797-9.536,21.333-21.333,21.333h-85.333c-11.797,0-21.333-9.536-21.333-21.333s9.536-21.333,21.333-21.333h64v-128
+              c0-11.797,9.536-21.333,21.333-21.333s21.333,9.536,21.333,21.333V256z"></path>
+                                    </g>
+                                </g>
+                            </svg>
+                            <span class="ml-1"><%= quiz.creationTime %></span></span>
+                    </div>
+                </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+  </div>
+
+  <script>
+
+
+function checkplay(joinCode) {
+    
+
+    fetch('/checkuserplay', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quizid: joinCode }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status) {
+            if (confirm(data.message + ". Do you want to Continue?")) {
+                // If the user confirms, make a GET request to /playbyid/{quizid}
+                fetch('/playbyid/' + data.playId)
+                .then(response => response.json())
+                .then(playData => {
+                    if (playData.status) {
+                        // Redirect to /joinquiz/{joincode} if the status is true
+                        window.location.href = '/joinquiz/' + playData.quizId;
+                    } else {
+                        // Show alert with a message if the status is false
+                        alert(playData.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                // User choose not to continue
+                playquiz(joinCode);
+            }
+        } else {
+            // Continue with the join form submission
+            playquiz(joinCode);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+
+    function playquiz(quizid) {
+
+    fetch('/validateJoinCode', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ joinCode: quizid }),
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.valid) {
+            
+          window.location.href = '/joinquiz/' + data.quizId;
+        } else {
+          alert(data.message);
+        }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+    });
+
+  }
+
+
+    function deleteQuiz(quizid) {
+
+   fetch('/deleteQuiz', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quizId: quizid }),
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.message) {
+            alert(data.message);
+           location.reload();
+        } else {
+          alert(data.error);
+        }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+    });
+
+  }
+  </script>
+</body>
+</html>

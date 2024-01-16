@@ -1,0 +1,72 @@
+[
+    {
+      "quizId": "7894678",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Fluid Mechanics",
+      "questions": 10,
+      "topicId": "7894678"
+    },
+    {
+      "quizId": "9874587",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Theory of Automata",
+      "questions": 10,
+      "topicId": "9874587"
+    },
+    {
+      "quizId": "8457984",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Digital Image Processing",
+      "questions": 10,
+      "topicId": "8457984"
+    },
+    {
+      "quizId": "4875984",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Operating System",
+      "questions": 10,
+      "topicId": "4875984"
+    },
+    {
+      "quizId": "7845974",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Computer Network",
+      "questions": 10,
+      "topicId": "7845974"
+    },
+    {
+      "quizId": "4578498",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Microprocessors",
+      "questions": 10,
+      "topicId": "4578498"
+    },
+    {
+      "quizId": "9154879",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Computer Organization",
+      "questions": 10,
+      "topicId": "9154879"
+    },
+    {
+      "quizId": "6548794",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Python Programming",
+      "questions": 10,
+      "topicId": "6548794"
+    },
+    {
+      "quizId": "4875123",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "C Programming",
+      "questions": 10,
+      "topicId": "4875123"
+    },
+    {
+      "quizId": "6589745",
+      "image": "https://images.pexels.com/photos/196667/pexels-photo-196667.jpeg?auto=compress&amp;cs=tinysrgb&amp;dpr=1&amp;w=500",
+      "title": "Java Programming",
+      "questions": 10,
+      "topicId": "6589745"
+    }
+  ]

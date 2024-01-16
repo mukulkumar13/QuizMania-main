@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/10e59d5802.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="icon" href="/logo.jpg" type="image/jpg">
+
+    <title><%= title %></title>
+    <style>
+        body {
+            background-color: rgba(8, 21, 55, 255);
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .border {
+            border: 7px solid;
+            border-color: #414864;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container col-md-8 ">
+    
+        <div class="container-fluid">
+            <div class="d-flex mt-3">
+                <div id="questionleft" class="bg-secondary text-white p-2 rounded  me-4">
+
+                </div>
+                <div id="userscore" class="bg-dark text-white p-2 rounded  me-4">
+                    Score: 0
+                </div>
+            </div>
+        </div>
+
+
+        <div class="text-center mt-2">
+            <img src="/logo.jpg" alt="Logo" class="mt-4 "
+                style="max-height: 100px; max-width: 100px; border-radius:50%;" />
+        </div>
+
+        <i style="font-size: 2rem;" id="openIcon" class="fa-regular fa-image text-white text-2xl cursor-pointer"></i>
+         <div id="subWindow" class="modal fade">
+           <div class="modal-dialog modal-dialog-centered">
+             <div class="modal-content">
+               <div class="modal-header">
+                 <h5 class="modal-title">Image Preview</h5>
+                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                   <span aria-hidden="true">&times;</span>
+                 </button>
+               </div>
+               <div class="modal-body">
+                 <img src="https://www.umegaoka.or.jp/wp-content/uploads/no-image.jpg" alt="Image" id="qImg" class="img-fluid">
+               </div>
+             </div>
+           </div>
+         </div>
+
+ 
+ 
+        <!-- Question Div with rounded border -->
+        <div class="question  p-3 mt-5 border  rounded-pill">
+            <h2 class="mb-3 text-center" id="question"> Question Loading.....</h2>
+        </div>
+        <div>
+            
+            <div class="options row mt-5 text-center" id="optionsContainer">
+                <!-- Options will be dynamically added here based on the number of options -->
+            </div>
+
+        
+        </div>
+        <!-- Timer in top corner -->
+        <div class="position-absolute top-0 end-0 mt-4 me-4">
+            <span id="timer" class="bg-primary text-white p-2 rounded">Timeleft: NAN sec</span>
+        </div>
+    </div>
+    <!-- Submit button in bottom right -->
+    <div class="d-flex justify-content-end mb-4 me-4">
+        <button class="btn btn-primary" id="nextQuestion">Next</button>
+    </div>
+
+    <div class="d-flex justify-content-center mb-4 me-4">
+        <button class="btn btn-danger" id="endquiz">END QUIZ</button>
+    </div>
+
+
+    <script>
+
+          
+document.addEventListener("DOMContentLoaded", function () {
+              var openIcon = document.getElementById("openIcon");
+              var subWindow = document.getElementById("subWindow");
+        
+              openIcon.addEventListener("click", function () {
+                $('#subWindow').modal('show');
+              });
+            });
+
+            
+        const quizForm = document.getElementById('quizForm');
+        const nextQuestionButton = document.getElementById('nextQuestion');
+        const endquizButton = document.getElementById('endquiz');
+        const questionText = document.getElementById('question');
+        const timerDisplay = document.getElementById('timer');
+        let questionTimer;
+
+        const quizId = '<%= quizId %>';
+        let timeLeft = 10; // Initial time in seconds
+
+        function loadOptions(options) {
+    const optionsContainer = document.getElementById('optionsContainer');
+    optionsContainer.innerHTML = ''; // Clearing previous options
+
+    options.forEach((option, index) => {
+        const optionId = 'option' + (index + 1);
+        const optionValue = String.fromCharCode(97 + index); // Converting index to ASCII character code
+
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'col-md-6';
+        optionDiv.innerHTML = `
+            <div class="option rounded-pill border p-2 mb-4" onclick="selectRadio('${optionId}')">
+                <div class="form-check">
+                    <input class="form-check-input border mx-1" type="radio" name="answer" value="${optionValue}" id="${optionId}">
+                    <label class="form-check-label" for="${optionId}">${option}</label>
+                </div>
+            </div>
+        `;
+
+        optionsContainer.appendChild(optionDiv);
+    });
+}
+
+
+        function selectRadio(optionId) {
+            const radio = document.getElementById(optionId);
+            radio.checked = true;
+          
+            var submitButton = document.getElementById('nextQuestion');
+
+            // Disable or enable the submit button based on whether any option is selected
+            submitButton.disabled = !document.querySelector('input[name="answer"]:checked');
+        }
+        function updateTimerDisplay() {
+            timerDisplay.textContent = `Time Left: ${timeLeft} sec`;
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            questionTimer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+            if (selectedAnswer) {
+                submitAnswer(selectedAnswer.value);
+            } else {
+
+                submitAnswer("none"); // Submit "none" if no answer is selected
+                alert("Oops!! question misssed, attempt next question now...");
+            }
+                    
+                }
+            }, 1000); // Update every 1 second
+        }
+
+
+        function clearOptionCheckboxes() {
+   
+    const numOptions = document.querySelectorAll('.option').length;
+
+    for (let i = 1; i <= numOptions; i++) {
+        document.getElementById('option' + i).checked = false;
+    }
+}
+
+
+function loadQuestion() {
+    clearInterval(questionTimer);
+    timeLeft = 10;
+    document.getElementById("nextQuestion").disabled = true;
+
+    startTimer();
+
+    clearOptionCheckboxes(); // Clear the checked state for all options
+
+    document.querySelectorAll('.option').forEach(function (div) {
+        div.style.backgroundColor = '';
+    });
+
+    fetch(`/getQuestion/${quizId}`, {
+        method: 'GET',
+    })
+        .then(response => response.json())
+        .then(data => {
+
+            if(data.message=="quiz completed"){
+                    window.location.replace = `/${quizId}/leaderboard`;
+
+                    return ;
+                }
+                var currentQuestion = data.currentQuestion;
+                var totalQuestion = data.totalQuestions;
+                if(currentQuestion==totalQuestion){
+                    document.getElementById('nextQuestion').innerHTML = "Submit Quiz";
+                }
+
+                document.getElementById('questionleft').innerHTML = currentQuestion + '/' + totalQuestion;
+                var quizscore = data.score;
+
+document.getElementById('userscore').innerHTML = 'Score: ' + quizscore;
+
+
+                
+            if (data && data.question) {
+
+                if(data.imageUrl){
+                    qImg.src = data.imageUrl;
+                   
+                    document.getElementById('openIcon').style.display = 'block';
+                }else{
+                    qImg.src = "https://www.umegaoka.or.jp/wp-content/uploads/no-image.jpg";
+                    document.getElementById('openIcon').style.display='none';
+                }
+
+
+                questionText.textContent = data.question;
+                loadOptions(data.options);
+                timeLeft = data.timeleft;
+            } else {
+                window.location.replace = `/${quizId}/leaderboard`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            window.location.href = '/dashboard';
+        });
+}
+        async function submitAnswer(answer, terminate = false) {
+            clearInterval(questionTimer); // Clear the timer when the user submits an answer
+            timeLeft = 10; // Reset the timer
+            var apiPath = (terminate == true) ? "terminate" : "submitQuestion";
+            try {
+                const response = await fetch(`/${apiPath}/${quizId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ answer }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display quiz score
+                var quizscore = data.score;
+
+                document.getElementById('userscore').innerHTML = 'Score: ' + quizscore;
+
+
+                var radioButton = document.querySelector('input[name="answer"]:checked');
+                if (radioButton) {
+                    var divContainer = radioButton.parentNode.parentNode; // Assuming the div is two levels up
+                }
+
+                if (data.lastAnswerCorrect == true) {
+                    divContainer.style.backgroundColor = '#2ED910';
+
+                } else {
+                    if (radioButton) {
+                        divContainer.style.backgroundColor = '#D93010';
+                    }
+                    document.querySelector('input[name="answer"][value="' + (data.correctAnswer) + '"]').parentNode.parentNode.style.backgroundColor = "#2ED910";
+
+                }
+
+                window.history.pushState({}, '', '/' + quizId + '/leaderboard');
+
+                setTimeout(() => {
+                    if (data.message) {
+                        alert(`Quiz finished. Your score: ${data.score}`);
+                        window.history.pushState({}, '', '/' + quizId + '/leaderboard');
+                        window.location.reload();
+
+
+                    }
+                }, 1000)
+
+
+
+            } catch (error) {
+                console.error(error);
+            }
+
+            setTimeout(loadQuestion, 2000);
+        }
+
+        nextQuestionButton.addEventListener('click', () => {
+            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+            if (selectedAnswer) {
+                submitAnswer(selectedAnswer.value);
+            } else {
+
+                submitAnswer("none"); // Submit "none" if no answer is selected
+
+            }
+        });
+
+        endquizButton.addEventListener('click', () => {
+
+            if (confirm("Are you confirm to submit Quiz?")) {
+                const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+                if (selectedAnswer) {
+                    submitAnswer(selectedAnswer.value, true);
+                } else {
+
+                    submitAnswer("none", true); // Submit "none" if no answer is selected
+
+                }
+            }
+        });
+
+        // Load the first question when the page loads
+        loadQuestion();
+    </script>
+</body>
+
+</html>

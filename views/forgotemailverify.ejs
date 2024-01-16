@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/logo.jpg" type="image/jpg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css">
+    <title>
+        <%=title%>
+    </title>
+</head>
+
+<body>
+    <section class="bg-gray-50 dark:bg-gray-900">
+        <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+            <a href="#" class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+                <img class="w-8 h-8 mr-2" src="/logo.jpg" alt="logo">
+                QuizMania
+            </a>
+            <div
+                class="w-full p-6 bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md dark:bg-gray-800 dark:border-gray-700 sm:p-8">
+                <h2
+                    class="mb-1 text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+                    Forgot Password
+                </h2>
+                <div id="toast" class="hidden bg-green-500 text-white p-2 rounded text-center">OTP sent successfully
+                </div>
+                <div id="toast2" class="hidden bg-yellow-500 text-white p-2 rounded text-center">OTP sent successfully
+                </div>
+                <div id="toast3" class="hidden bg-red-500 text-white p-2 rounded text-center">OTP sent successfully
+                </div>
+
+                <form class="mt-4 space-y-4 lg:mt-5 md:space-y-5" id="ForgotForm">
+                    <div>
+                        <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email
+                            address</label>
+                        <div class="mt-2">
+                            <input id="email" name="email" type="email" autocomplete="email" required
+                                class="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        </div>
+                        <button type="button" id="sendOtpButton"
+                            class="mt-2 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-2 py-1 text-center me-2 mb-2 ">Send
+                            OTP</button>
+                    </div>
+
+                    <div>
+                        <label for="otp" class="block text-sm font-medium leading-6 text-gray-900">Enter OTP</label>
+                        <div class="mt-2">
+                            <input id="otp" name="otp" type="number" required
+                                class="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium leading-6 text-gray-900">New
+                            Password</label>
+                        <div class="mt-2">
+                            <input id="password" name="password" type="password" required
+                                class="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="confirm-password" class="block text-sm font-medium leading-6 text-gray-900">Confirm
+                            Password</label>
+                        <div class="mt-2">
+                            <input id="confirm-password" name="confirm-password" type="password" required
+                                class="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit"
+                            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Confirm </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sendOtpButton = document.getElementById("sendOtpButton");
+            const emailInput = document.getElementById("email");
+            const toast = document.getElementById("toast");
+            const toast2 = document.getElementById("toast2");
+            const toast3 = document.getElementById("toast3");
+
+            let canSendOtp = true;
+
+            sendOtpButton.addEventListener("click", function () {
+
+                toast2.innerText = "Sending OTP to " + emailInput.value + "...";
+                toast2.classList.remove("hidden");
+                toast.classList.add("hidden");
+                toast3.classList.add("hidden");
+
+                if (!canSendOtp) {
+
+                    toast3.innerText = "Please wait for 60 seconds before sending another OTP.";
+                    toast3.classList.remove("hidden");
+                    toast.classList.add("hidden");
+                    toast2.classList.add("hidden");
+
+
+                    alert("Please wait for 60 seconds before sending another OTP.");
+                    return;
+                }
+
+                const email = emailInput.value;
+                if (email.length < 10) {
+                    toast.classList.add("hidden");
+
+                    toast2.classList.add("hidden");
+                    toast3.classList.remove("hidden");
+                    toast3.innerText = "Invalid Email";
+                } else {
+
+                    fetch(`/sendForgotOtp/${email}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // OTP sent successfully
+
+                                toast.innerText = "OTP sent successfully";
+                                toast.classList.remove("hidden");
+
+                                toast2.classList.add("hidden");
+                                toast3.classList.add("hidden");
+                                setTimeout(() => {
+                                    toast.classList.add("hidden");
+                                }, 59000);
+
+                                // a 60-second delay before allowing another OTP to be sent
+                                canSendOtp = false;
+                                setTimeout(() => {
+                                    canSendOtp = true;
+                                }, 60000);
+                            } else {
+                                toast.classList.add("hidden");
+                                toast2.classList.add("hidden");
+
+                                toast3.innerText = "Failed to send OTP.";
+                                toast3.classList.remove("hidden");
+                                // Failed to send OTP
+                                alert("Failed to send OTP: " + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                         
+                            alert("Error sending OTP");
+                        });
+                }
+            });
+        });
+
+
+        document.getElementById("ForgotForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const cpass = document.getElementById("confirm-password").value;
+
+            const otp = document.getElementById("otp").value;
+            const toast = document.getElementById("toast");
+            const toast2 = document.getElementById("toast2");
+            const toast3 = document.getElementById("toast3");
+
+            if (password !== cpass) {
+                toast.classList.add("hidden");
+                toast2.classList.add("hidden");
+                toast3.innerText = "Password and Confirm Password must be same";
+                toast3.classList.remove("hidden");
+                return;
+            }
+            const apiUrl = "/changePassword";
+
+            const formData = {
+                email: email,
+                password: password,
+                otp: otp,
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    body: JSON.stringify(formData),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+
+                if (response.status === 200) {
+
+                    if (data.success === true) {
+
+                        toast3.classList.add("hidden");
+                        toast2.classList.add("hidden");
+                        toast.innerText = "Passowrd Change Successfull";
+                        toast.classList.remove("hidden");
+                        window.location.href = "/login";
+                    } else {
+                        // Display an error message
+                        toast.classList.add("hidden");
+                        toast2.classList.add("hidden");
+                        toast3.innerText = data.message;
+                        toast3.classList.remove("hidden");
+                    }
+                } else {
+                    // Display an error message
+                    toast.classList.add("hidden");
+                    toast2.classList.add("hidden");
+                    toast3.innerText = data.message;
+                    toast3.classList.remove("hidden");
+                }
+            } catch (error) {
+                // Display an error message
+                toast.classList.add("hidden");
+                toast2.classList.add("hidden");
+                toast3.innerText = "Failed to Change Password, An error occured";
+                toast3.classList.remove("hidden");
+            }
+        });
+
+    </script>
+</body>
+
+</html>
